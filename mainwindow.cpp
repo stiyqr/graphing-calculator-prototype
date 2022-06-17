@@ -11,25 +11,20 @@ MainWindow::MainWindow(QWidget *parent)
     addNumberLabelX();
     addNumberLabelY();
 
+    ui->plot->xAxis->setTicks(false);
+    ui->plot->yAxis->setTicks(false);
+    ui->plot->xAxis2->setTicks(false);
+    ui->plot->yAxis2->setTicks(false);
+    ui->plot->xAxis2->setVisible(true);
+    ui->plot->yAxis2->setVisible(true);
+
     connect(ui->plot->xAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(addNumberLabelX()));
     connect(ui->plot->yAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(addNumberLabelY()));
-    connect(ui->plot->xAxis, SIGNAL(mousePress(MouseEvent*)), this, SLOT(addNumberLabelX()));
-    connect(ui->plot->yAxis, SIGNAL(mousePress(MouseEvent*)), this, SLOT(addNumberLabelY()));
-
-    //addNumberLabels();
-
-    //QObject::connect(ui->btn_addFunc, &QPushButton::clicked, this, &MainWindow::addWidget);
 
 
 
     /////////////////////////////////////////////// try area ///////////////////////////////////////////////
 
-
-    QCPItemText *textLabel = new QCPItemText(ui->plot);
-    textLabel->setPositionAlignment(Qt::AlignTop|Qt::AlignHCenter);
-    textLabel->position->setType(QCPItemPosition::ptPlotCoords);
-    textLabel->position->setCoords(0.5, 0); // place position at center/top of axis rect
-    textLabel->setText("Text Item Demo");
 
     QCPItemLine *line = new QCPItemLine(ui->plot);
     line->setPen(QPen(Qt::green));
