@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "Widget.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -84,31 +86,15 @@ void MainWindow::addWidget() {
     QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(ui->vLayout);
     QHBoxLayout* subLayout = new QHBoxLayout();
 
-    QToolButton* buttonCol = new QToolButton();
-    buttonCol->setStyleSheet({randomColor()});
-    subLayout->addWidget(buttonCol);
-
-    QString lineStr = "y=";
-    QLineEdit* txt_inputBar = new QLineEdit(lineStr);
-    subLayout->addWidget(txt_inputBar);
-
-    QToolButton* buttonHd = new QToolButton();
-    auto hdAct = new QAction();
-    hdAct->setIcon(QIcon("../assets/icon-hide.png"));
-    buttonHd->setDefaultAction(hdAct);
-    subLayout->addWidget(buttonHd);
-
-    QToolButton* buttonRm = new QToolButton();
-    auto rmAct = new QAction();
-    rmAct->setIcon(QIcon("../assets/icon-remove.png"));
-    buttonRm->setDefaultAction(rmAct);
-    subLayout->addWidget(buttonRm);
+    Widget* widget = new Widget{subLayout, ui->plot};
 
     layout->insertLayout(0, subLayout);
 
-    buttonToLayoutMap.insert(buttonRm, subLayout);
+    buttonToLayoutMap.insert(widget->buttonRm, subLayout);
+    hiddenList.insert(widget->buttonHd, false);
 
-    QObject::connect(buttonRm, &QToolButton::clicked, this, &MainWindow::removeWidget);
+    QObject::connect(widget->buttonRm, &QToolButton::clicked, this, &MainWindow::removeWidget);
+    QObject::connect(widget->buttonHd, &QToolButton::clicked, this, &MainWindow::hideWidget);
 }
 
 void MainWindow::removeWidget() {
@@ -123,17 +109,18 @@ void MainWindow::removeWidget() {
     delete layout;
 }
 
-QString MainWindow::randomColor() {
-    int rgb1 = rand() % 256;
-    int rgb2 = rand() % 256;
-    int rgb3 = rand() % 256;
+void MainWindow::hideWidget() {
+    QToolButton* button = qobject_cast<QToolButton*>(sender());
 
-    QString colorStr = "background-color: rgb(" + QString::number(rgb1) + ", " + QString::number(rgb2)
-            + ", " + QString::number(rgb3) + ")";
+    auto&& hidden = hiddenList[button];
+    hidden = !hidden;
 
-    qDebug() << colorStr;
-
-    return colorStr;
+    if (hidden) {
+        button->setIcon(QIcon("../assets/icon-hidden.png"));
+    }
+    else {
+        button->setIcon(QIcon("../assets/icon-hide.png"));
+    }
 }
 
 void MainWindow::setGraphWindow() {

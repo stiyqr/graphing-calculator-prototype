@@ -21,6 +21,7 @@ public:
 
     void addWidget();
     void removeWidget();
+    void hideWidget();
     QString randomColor();
 
     void setGraphWindow();
@@ -40,6 +41,7 @@ private:
     Ui::MainWindow *ui;
 
     QHash<QToolButton*, QHBoxLayout*> buttonToLayoutMap;
+    QHash<QToolButton*, bool> hiddenList;
 
     QPointer<QCPGraph> graph1;
     QTimer mDataTimer;
