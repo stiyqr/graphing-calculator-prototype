@@ -37,6 +37,7 @@ Parser::Parser(QString str) {
 
 void Parser::init(QString str) {
     *this = {};
+    qDebug() << "INIT x: " << var.variables["x"];
 
     // remove white space from input
     inputVar = "";
@@ -224,12 +225,12 @@ void Parser::parseMainStr() {
 
         case Token::TType::FUNC:
             opStack.emplace_front(currentToken);
-            //qDebug() << "found function";
+            qDebug() << "found function";
             break;
 
         case Token::TType::COMMA:
             // ignore comma
-            //qDebug() << "found comma";
+            qDebug() << "found comma";
             break;
 
         case Token::TType::ERR:
@@ -580,6 +581,7 @@ Token Parser::calculateFunc(Token num1, Token num2, Token func) {
 
         // variable exist, calculate variable value
         varParser(num1);
+        qDebug() << "CALCULATE FUNC num1: " << num1.getNum();
     }
 
     if (num2.getType() == Token::TType::X || num2.getType() == Token::TType::Y) {
@@ -594,6 +596,7 @@ Token Parser::calculateFunc(Token num1, Token num2, Token func) {
 
         // variable exist, calculate variable value
         varParser(num2);
+        qDebug() << "CALCULATE FUNC num2: " << num2.getNum();
     }
 
     // if num is variable, solve num

@@ -173,6 +173,12 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
 
     }
 
+    if (input[cursor] == ',') {
+        type = Token::TType::COMMA;
+        cursor++;
+        return type;
+    }
+
     return Token::TType::ERR;
 }
 
