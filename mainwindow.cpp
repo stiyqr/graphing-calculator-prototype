@@ -22,13 +22,33 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->plot->yAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(addNumberLabelY()));
 
 
+    //connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
+    //mDataTimer.start(40);
 
     /////////////////////////////////////////////// try area ///////////////////////////////////////////////
 
+    connect(ui->plot->xAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(tryGraph()));
+    /*QCPGraph* graph = ui->plot->addGraph();
 
-    QCPItemLine *line = new QCPItemLine(ui->plot);
-    line->setPen(QPen(Qt::green));
-    //line->start->setCoords(ui->plot->xAxis->range().lower);
+    for (int i = 0; i < 999; i++) {
+        int x = i / 50;
+        int y = qSin(graph->dataCount()/50.0);
+
+        //graph->addData(x, y);
+        //ui->plot->replot();
+    }
+
+    QVector<double> x(251), y0(251), y1(251);
+    for (int i=0; i<251; ++i)
+    {
+      x[i] = i;
+      y0[i] = qExp(-i/150.0)*qCos(i/10.0); // exponentially decaying cosine
+    }
+    graph->setData(x,y0);
+    graph->rescaleAxes();*/
+
+    //graph1 = ui->plot->addGraph(ui->plot->xAxis, ui->plot->axisRect()->axis(QCPAxis::atRight, 0));
+    //graph1->setPen(QPen(QColor(250, 120, 0)));
 
     /*QCPItemRect* r =  new QCPItemRect(ui->plot);
     r->topLeft->setPixelPosition(ui->plot->xAxis->range().lower);
@@ -130,6 +150,25 @@ void MainWindow::setGraphWindow() {
 
 }
 
+void MainWindow::tryGraph() {
+    //double interval = ui->plot->xAxis->range().upper - ui->plot->xAxis->range().lower;
+    QCPGraph* graph = ui->plot->addGraph();
+
+    for (double i = 0; i < ui->plot->xAxis->range().upper * 1000; i++) {
+        double x = i/1000;
+        double y = x;
+
+        graph->addData(x, y);
+    }
+
+    for (double i = 0; -i > ui->plot->xAxis->range().lower * 1000; i++) {
+        double x = -i/1000;
+        double y = x;
+
+        graph->addData(x, y);
+    }
+}
+
 void MainWindow::addNumberLabelX() {
     static QVector<QCPItemText*> numLabelx;
 
@@ -205,3 +244,20 @@ void MainWindow::addNumberLabelY() {
 void MainWindow::on_btn_addFunc_clicked() {
     addWidget();
 }
+
+
+void MainWindow::timerSlot()
+{
+  // calculate and add a new data point to each graph:
+  graph1->addData(graph1->dataCount(), qSin(graph1->dataCount()/50.0)+qSin(graph1->dataCount()/50.0/0.3843)*0.25);
+
+
+  // make key axis range scroll with the data:
+  graph1->rescaleValueAxis(false, true);
+
+  // update the vertical axis tag positions and texts to match the rightmost data point of the graphs:
+  double graph1Value = graph1->dataMainValue(graph1->dataCount()-1);
+
+  ui->plot->replot();
+}
+

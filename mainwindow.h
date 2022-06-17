@@ -5,6 +5,7 @@
 #include <QtWidgets>
 
 #include "ui_mainwindow.h"
+#include "qcustomplot.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -24,15 +25,23 @@ public:
 
     void setGraphWindow();
 
+
+
 private slots:
     void on_btn_addFunc_clicked();
 
     void addNumberLabelX();
     void addNumberLabelY();
 
+    void timerSlot();
+    void tryGraph();
+
 private:
     Ui::MainWindow *ui;
 
     QHash<QToolButton*, QHBoxLayout*> buttonToLayoutMap;
+
+    QPointer<QCPGraph> graph1;
+    QTimer mDataTimer;
 };
 #endif // MAINWINDOW_H
