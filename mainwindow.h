@@ -1,7 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtWidgets/QMainWindow>
+#include <QMainWindow>
+#include <QtWidgets>
+
 #include "ui_mainwindow.h"
 
 QT_BEGIN_NAMESPACE
@@ -23,6 +25,9 @@ public:
 
 private slots:
     void on_btn_addFunc_clicked();
+
+    void addNumberLabelX();
+    void addNumberLabelY();
 
 private:
     Ui::MainWindow *ui;
