@@ -329,6 +329,8 @@ void MainWindow::updateGraphY(const QCPRange& range, Widget* widget) {
         qDebug() << "tick: " << tick;
         qDebug() << "max: " << max;
         qDebug() << "value: " << value;
+
+        widget->parser.mainStackToStr();
     //}
 }
 
