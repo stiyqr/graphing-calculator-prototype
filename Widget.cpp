@@ -1,7 +1,9 @@
 #include "Widget.h"
 
 
-Widget::Widget(QHBoxLayout* subLayout, QCustomPlot* plot) {
+Widget::Widget(QCustomPlot* plot) {
+    subLayout = new QHBoxLayout();
+
     buttonCol = new QToolButton();
     buttonCol->setStyleSheet({randomColor()});
     subLayout->addWidget(buttonCol);
@@ -33,7 +35,9 @@ QString Widget::randomColor() {
     QString colorStr = "background-color: rgb(" + QString::number(rgb1) + ", " + QString::number(rgb2)
             + ", " + QString::number(rgb3) + ")";
 
-    qDebug() << colorStr;
+    color = colorStr;
+
+    //qDebug() << colorStr;
 
     return colorStr;
 }

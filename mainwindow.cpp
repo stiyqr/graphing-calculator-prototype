@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "Widget.h"
+#include "Parser.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -10,8 +10,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     setGraphWindow();
-    addNumberLabelX();
-    addNumberLabelY();
 
     ui->plot->xAxis->setTicks(false);
     ui->plot->yAxis->setTicks(false);
@@ -20,16 +18,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->plot->xAxis2->setVisible(true);
     ui->plot->yAxis2->setVisible(true);
 
-    connect(ui->plot->xAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(addNumberLabelX()));
-    connect(ui->plot->yAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(addNumberLabelY()));
+    connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelX()));
+    connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelY()));
 
-
-    //connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
-    //mDataTimer.start(40);
 
     /////////////////////////////////////////////// try area ///////////////////////////////////////////////
 
-    connect(ui->plot->xAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(tryGraph()));
+    graph = ui->plot->addGraph();
+    //connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(tryGraph(const QCPRange&)));
     /*QCPGraph* graph = ui->plot->addGraph();
 
     for (int i = 0; i < 999; i++) {
@@ -84,22 +80,25 @@ void MainWindow::addWidget() {
     QObject::connect(button, &QPushButton::clicked, this, &MainWindow::removeWidget);*/
 
     QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(ui->vLayout);
-    QHBoxLayout* subLayout = new QHBoxLayout();
+    //QHBoxLayout* subLayout = new QHBoxLayout();
 
-    Widget* widget = new Widget{subLayout, ui->plot};
+    Widget* widget = new Widget{ui->plot};
 
-    layout->insertLayout(0, subLayout);
+    layout->insertLayout(0, widget->subLayout);
 
-    buttonToLayoutMap.insert(widget->buttonRm, subLayout);
+    buttonToWidget.insert(widget->buttonRm, widget);
+    buttonToWidget.insert(widget->buttonHd, widget);
+    buttonToWidget.insert(widget->buttonEn, widget);
     hiddenList.insert(widget->buttonHd, false);
 
     QObject::connect(widget->buttonRm, &QToolButton::clicked, this, &MainWindow::removeWidget);
     QObject::connect(widget->buttonHd, &QToolButton::clicked, this, &MainWindow::hideWidget);
+    QObject::connect(widget->buttonEn, &QToolButton::clicked, this, &MainWindow::readInput);
 }
 
 void MainWindow::removeWidget() {
     QToolButton* button = qobject_cast<QToolButton*>(sender());
-    QHBoxLayout* layout = buttonToLayoutMap.take(button);
+    QHBoxLayout* layout = buttonToWidget.take(button)->subLayout;
 
     while (layout->count() != 0) {
         QLayoutItem* item = layout->takeAt(0);
@@ -123,6 +122,28 @@ void MainWindow::hideWidget() {
     }
 }
 
+void MainWindow::readInput() {
+    QToolButton* button = qobject_cast<QToolButton*>(sender());
+    Widget* widget = buttonToWidget.value(button);
+
+    inputStr = widget->txt_inputBar->text();
+    Parser parser(inputStr);
+
+    outputStr = parser.getOutputStr();
+    qDebug() << outputStr;
+
+    if (outputStr == "Error: input invalid") {
+        widget->buttonCol->setStyleSheet({"color: red"});
+        widget->buttonCol->setText("X");
+    }
+    else {
+        widget->buttonCol->setText("");
+        widget->buttonCol->setStyleSheet(widget->color);
+
+        // update graph
+    }
+}
+
 void MainWindow::setGraphWindow() {
     // make XY axis
     ui->plot->xAxis->grid()->setPen(QPen(QColor(220, 220, 220)));
@@ -132,16 +153,16 @@ void MainWindow::setGraphWindow() {
 
     // interactions for zoom and drag
     ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
-    ui->plot->addGraph();
-    connect(ui->plot, SIGNAL(mouseDoubleClick(QMouseEvent*)), SLOT(clickedGraph(QMouseEvent*)));
+    //ui->plot->addGraph();
+    //connect(ui->plot, SIGNAL(mouseDoubleClick(QMouseEvent*)), SLOT(clickedGraph(QMouseEvent*)));
 
 }
 
-void MainWindow::tryGraph() {
-    //double interval = ui->plot->xAxis->range().upper - ui->plot->xAxis->range().lower;
-    QCPGraph* graph = ui->plot->addGraph();
+void MainWindow::tryGraph(const QCPRange& range) {
+    //QCPGraph* graph = ui->plot->addGraph();
+    /*auto interval = ui->plot->xAxis->range().upper - ui->plot->xAxis->range().lower;
 
-    for (double i = 0; i < ui->plot->xAxis->range().upper * 1000; i++) {
+    for (double i = 0; ui->plot->xAxis->range().upper; i++) {
         double x = i/1000;
         double y = x;
 
@@ -153,7 +174,25 @@ void MainWindow::tryGraph() {
         double y = x;
 
         graph->addData(x, y);
-    }
+    }*/
+
+    auto&& axis = ui->plot->xAxis;
+
+    auto&& tickVector =axis->tickVector();
+    //auto&& tickVectorLabels = axis->tickVectorLabels();
+
+    auto&& tickVectorIterator = tickVector.begin();
+    //auto&& tickVectorLabelsIterator = tickVectorLabels.begin();
+
+    constexpr auto precision = 1000;
+    const auto tick = ( *( tickVectorIterator + 1 ) - *tickVectorIterator ) / precision;
+    const auto max = ( range.upper - range.lower ) / tick;
+    auto value = range.lower;
+
+    graph->data().data()->clear();
+
+    for ( auto i = 0; i < max; ++i, value += tick )
+        graph->addData( value, qSin( value ) );
 }
 
 void MainWindow::addNumberLabelX() {
@@ -228,23 +267,27 @@ void MainWindow::addNumberLabelY() {
     }
 }
 
-void MainWindow::on_btn_addFunc_clicked() {
-    addWidget();
+void MainWindow::updateGraphs(const QCPRange& range) {
+    auto&& axis = ui->plot->xAxis;
+
+    auto&& tickVector =axis->tickVector();
+    auto&& tickVectorIterator = tickVector.begin();
+
+    constexpr auto precision = 1000;
+    const auto tick = ( *( tickVectorIterator + 1 ) - *tickVectorIterator ) / precision;
+    const auto max = ( range.upper - range.lower ) / tick;
+
+    foreach (Widget* widget, buttonToWidget) {
+        auto value = range.lower;
+
+        widget->graph->data().data()->clear();
+
+        for ( auto i = 0; i < max; ++i, value += tick )
+            widget->graph->addData( value, qSin( value ) );
+    }
 }
 
-
-void MainWindow::timerSlot()
-{
-  // calculate and add a new data point to each graph:
-  graph1->addData(graph1->dataCount(), qSin(graph1->dataCount()/50.0)+qSin(graph1->dataCount()/50.0/0.3843)*0.25);
-
-
-  // make key axis range scroll with the data:
-  graph1->rescaleValueAxis(false, true);
-
-  // update the vertical axis tag positions and texts to match the rightmost data point of the graphs:
-  double graph1Value = graph1->dataMainValue(graph1->dataCount()-1);
-
-  ui->plot->replot();
+void MainWindow::on_btn_addFunc_clicked() {
+    addWidget();
 }
 

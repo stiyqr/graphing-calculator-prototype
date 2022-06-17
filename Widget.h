@@ -13,12 +13,14 @@ public:
     QToolButton* buttonRm;
     QCPGraph*    graph;
 
-    QColor color;
-    bool   hidden = false;
+    QHBoxLayout* subLayout;
+
+    QString color;
+    bool    hidden = false;
 
 
     Widget(){}
-    Widget(QHBoxLayout*, QCustomPlot*);
+    Widget(QCustomPlot*);
 
     QString randomColor();
 };

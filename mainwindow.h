@@ -6,6 +6,7 @@
 
 #include "ui_mainwindow.h"
 #include "qcustomplot.h"
+#include "Widget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -19,10 +20,10 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void addWidget();
-    void removeWidget();
-    void hideWidget();
-    QString randomColor();
+    void    addWidget();
+    void    removeWidget();
+    void    hideWidget();
+    void    readInput();
 
     void setGraphWindow();
 
@@ -33,17 +34,18 @@ private slots:
 
     void addNumberLabelX();
     void addNumberLabelY();
+    void updateGraphs(const QCPRange&);
 
-    void timerSlot();
-    void tryGraph();
+    void tryGraph(const QCPRange&);
 
 private:
     Ui::MainWindow *ui;
 
-    QHash<QToolButton*, QHBoxLayout*> buttonToLayoutMap;
-    QHash<QToolButton*, bool> hiddenList;
+    QHash<QToolButton*, Widget*> buttonToWidget;
+    QHash<QToolButton*, bool>    hiddenList;
 
-    QPointer<QCPGraph> graph1;
-    QTimer mDataTimer;
+    QString   inputStr, outputStr;
+    QCPGraph* graph;
+
 };
 #endif // MAINWINDOW_H
