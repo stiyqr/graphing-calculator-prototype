@@ -20,6 +20,7 @@ public:
 
     void addWidget();
     void removeWidget();
+    QString randomColor();
 
     void setGraphWindow();
 

@@ -65,24 +65,24 @@ void MainWindow::addWidget() {
     QHBoxLayout* subLayout = new QHBoxLayout();
 
     QToolButton* buttonCol = new QToolButton();
-    buttonCol->setStyleSheet({"background-color : green"});
+    buttonCol->setStyleSheet({randomColor()});
     subLayout->addWidget(buttonCol);
 
     QString lineStr = "y=";
     QLineEdit* txt_inputBar = new QLineEdit(lineStr);
     subLayout->addWidget(txt_inputBar);
 
-    QToolButton* buttonRm = new QToolButton();
-    auto rmAct = new QAction();
-    rmAct->setIcon(QIcon("../assets/icon-remove.png"));
-    buttonRm->setDefaultAction(rmAct);
-    subLayout->addWidget(buttonRm);
-
     QToolButton* buttonHd = new QToolButton();
     auto hdAct = new QAction();
     hdAct->setIcon(QIcon("../assets/icon-hide.png"));
     buttonHd->setDefaultAction(hdAct);
     subLayout->addWidget(buttonHd);
+
+    QToolButton* buttonRm = new QToolButton();
+    auto rmAct = new QAction();
+    rmAct->setIcon(QIcon("../assets/icon-remove.png"));
+    buttonRm->setDefaultAction(rmAct);
+    subLayout->addWidget(buttonRm);
 
     layout->insertLayout(0, subLayout);
 
@@ -101,6 +101,19 @@ void MainWindow::removeWidget() {
         delete item;
     }
     delete layout;
+}
+
+QString MainWindow::randomColor() {
+    int rgb1 = rand() % 256;
+    int rgb2 = rand() % 256;
+    int rgb3 = rand() % 256;
+
+    QString colorStr = "background-color: rgb(" + QString::number(rgb1) + ", " + QString::number(rgb2)
+            + ", " + QString::number(rgb3) + ")";
+
+    qDebug() << colorStr;
+
+    return colorStr;
 }
 
 void MainWindow::setGraphWindow() {
