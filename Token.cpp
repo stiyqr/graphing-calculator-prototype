@@ -89,10 +89,19 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
         }
 
         // check if value is function or variable
-        if (value == "x" || value == "y" || value == "sin" || value ==  "cos" || value == "tan" || value == "pow" || value == "sqrt") {
+        if (value == "sin" || value ==  "cos" || value == "tan" || value == "pow" || value == "sqrt") {
             type = Token::TType::FUNC;
             setPrecedence();
             associative = Token::ASOC::FUNC;
+        }
+        else if (value == "x" || value == "y" || value == "X" || value == "Y") {
+            if (value == 'x' || value == 'X') {
+                type = Token::TType::X;
+            }
+
+            if (value == 'y' || value == 'Y') {
+                type = Token::TType::Y;
+            }
         }
         else {
             type = Token::TType::VAR;
@@ -135,6 +144,7 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
         cursor++;
         return type;
     }
+
 
     if (input[cursor] == '+' || input[cursor] == '-') {
         // check if +- is operator

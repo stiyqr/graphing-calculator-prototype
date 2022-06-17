@@ -11,10 +11,10 @@
 class Parser {
 public:
     enum class IType {
-        XY, VAR, ERR
+        X, Y, VAR, ERR
     };
 
-private:
+public:
     std::deque<Token> mainStack, opStack;
     int     cursor = 0;
     Token   currentToken, resultToken;
@@ -33,6 +33,7 @@ public:
     Parser() {}
     Parser(QString);
 
+    void    init(QString);
     void    parseInputVar();
     void    parseMainStr();
     void    mainStackToStr();

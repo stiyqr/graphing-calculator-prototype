@@ -2,7 +2,9 @@
 #define WIDGET_H
 
 #include <QtWidgets>
+
 #include "qcustomplot.h"
+#include "Parser.h"
 
 class Widget {
 public:
@@ -18,7 +20,9 @@ public:
     QString color;
     bool    hidden = false;
 
+    Parser parser;
 
+public:
     Widget(){}
     Widget(QCustomPlot*);
 

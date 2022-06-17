@@ -7,7 +7,7 @@
 class Token {
 public:
     enum class TType {
-        NUM, VAR, SIGN_POS, SIGN_NEG, LEFT_BR, RIGHT_BR, FUNC, OP, EQUAL, COMMA, ERR
+        X, Y, NUM, VAR, SIGN_POS, SIGN_NEG, LEFT_BR, RIGHT_BR, FUNC, OP, EQUAL, COMMA, ERR
     };
 
     enum class ASOC {

@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <map>
 #include "Parser.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -20,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelX()));
     connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelY()));
+    //connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphY(const QCPRange&, widget)));
 
 
     /////////////////////////////////////////////// try area ///////////////////////////////////////////////
@@ -98,8 +100,18 @@ void MainWindow::addWidget() {
 
 void MainWindow::removeWidget() {
     QToolButton* button = qobject_cast<QToolButton*>(sender());
+    Widget* widget = buttonToWidget.value(button);
     QHBoxLayout* layout = buttonToWidget.take(button)->subLayout;
 
+    // delete variable
+    if (widget->parser.inputType == Parser::IType::VAR) {
+        auto it = widget->parser.var.variables.find(widget->parser.inputVar);
+        if ( it != widget->parser.var.variables.end()) {
+            widget->parser.var.variables.erase(it);
+        }
+    }
+
+    // delete widget
     while (layout->count() != 0) {
         QLayoutItem* item = layout->takeAt(0);
         delete item->widget();
@@ -127,10 +139,14 @@ void MainWindow::readInput() {
     Widget* widget = buttonToWidget.value(button);
 
     inputStr = widget->txt_inputBar->text();
-    Parser parser(inputStr);
+    widget->parser.var.variables["x"] = "0";
+    widget->parser.var.variables["y"] = "0";
+    widget->parser.init(inputStr);
 
-    outputStr = parser.getOutputStr();
-    qDebug() << outputStr;
+    outputStr = widget->parser.getOutputStr();
+    qDebug() << "   input: " << inputStr;
+    qDebug() << "   output: " << outputStr;
+    qDebug() << "   resultToken: " << widget->parser.resultToken.getNum();
 
     if (outputStr == "Error: input invalid") {
         widget->buttonCol->setStyleSheet({"color: red"});
@@ -141,6 +157,12 @@ void MainWindow::readInput() {
         widget->buttonCol->setStyleSheet(widget->color);
 
         // update graph
+        if (widget->parser.inputType == Parser::IType::Y) {
+            updateGraphY(ui->plot->xAxis->range(), widget);
+        }
+        else if (widget->parser.inputType == Parser::IType::X) {
+
+        }
     }
 }
 
@@ -267,24 +289,47 @@ void MainWindow::addNumberLabelY() {
     }
 }
 
-void MainWindow::updateGraphs(const QCPRange& range) {
+void MainWindow::updateGraphY(const QCPRange& range, Widget* widget) {
     auto&& axis = ui->plot->xAxis;
 
     auto&& tickVector =axis->tickVector();
     auto&& tickVectorIterator = tickVector.begin();
 
-    constexpr auto precision = 1000;
+    constexpr auto precision = 10;
     const auto tick = ( *( tickVectorIterator + 1 ) - *tickVectorIterator ) / precision;
     const auto max = ( range.upper - range.lower ) / tick;
 
-    foreach (Widget* widget, buttonToWidget) {
+    //std::map<QString, QString> dummyX;
+
+    //foreach (Widget* widget, buttonToWidget) {
         auto value = range.lower;
 
         widget->graph->data().data()->clear();
 
-        for ( auto i = 0; i < max; ++i, value += tick )
-            widget->graph->addData( value, qSin( value ) );
-    }
+        for ( auto i = 0; i < max; ++i, value += tick ) {
+            //dummyX["x"] = QString::number(value);
+            //dummyX["X"] = QString::number(value);
+
+            qDebug() << "input: " << widget->parser.inputStr;
+            widget->parser.var.variables["x"] = QString::number(value);
+            qDebug() << "size stack: " << widget->parser.mainStack.size();
+            qDebug() << "x: " << widget->parser.var.variables["x"];
+            qDebug() << "1";
+
+            widget->parser.init(widget->parser.inputStr);
+            qDebug() << "2";
+
+            widget->graph->addData( value, widget->parser.resultToken.getNum() );
+            qDebug() << "3";
+
+            qDebug() << "output: " << widget->parser.outputStr;
+            qDebug() << "resultToken: " << widget->parser.resultToken.getNum();
+        }
+
+        qDebug() << "tick: " << tick;
+        qDebug() << "max: " << max;
+        qDebug() << "value: " << value;
+    //}
 }
 
 void MainWindow::on_btn_addFunc_clicked() {
