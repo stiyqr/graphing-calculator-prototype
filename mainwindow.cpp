@@ -21,7 +21,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelX()));
     connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelY()));
-    //connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphY(const QCPRange&, widget)));
+    connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphY(const QCPRange&)));
+    connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphX(const QCPRange&)));
+    //connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(replotGraphs()));
 
 
     /////////////////////////////////////////////// try area ///////////////////////////////////////////////
@@ -158,10 +160,10 @@ void MainWindow::readInput() {
 
         // update graph
         if (widget->parser.inputType == Parser::IType::Y) {
-            updateGraphY(ui->plot->xAxis->range(), widget);
+            updateGraphY(ui->plot->xAxis->range());
         }
         else if (widget->parser.inputType == Parser::IType::X) {
-
+            updateGraphX(ui->plot->yAxis->range());
         }
     }
 }
@@ -289,49 +291,84 @@ void MainWindow::addNumberLabelY() {
     }
 }
 
-void MainWindow::updateGraphY(const QCPRange& range, Widget* widget) {
+void MainWindow::updateGraphY(const QCPRange& range) {
     auto&& axis = ui->plot->xAxis;
 
     auto&& tickVector =axis->tickVector();
     auto&& tickVectorIterator = tickVector.begin();
 
-    constexpr auto precision = 10;
+    constexpr auto precision = 100;
     const auto tick = ( *( tickVectorIterator + 1 ) - *tickVectorIterator ) / precision;
     const auto max = ( range.upper - range.lower ) / tick;
 
     //std::map<QString, QString> dummyX;
 
-    //foreach (Widget* widget, buttonToWidget) {
-        auto value = range.lower;
+    foreach(Widget* widget, buttonToWidget) {
+        if (widget->parser.inputType == Parser::IType::Y) {
+            widget->graph->data().data()->clear();
+        }
+    }
 
-        widget->graph->data().data()->clear();
+    foreach (Widget* widget, buttonToWidget) {
+        if (widget->graph->dataCount() != 0 || widget->parser.inputType != Parser::IType::Y) continue;
+
+        auto value = range.lower;
 
         for ( auto i = 0; i < max; ++i, value += tick ) {
             //dummyX["x"] = QString::number(value);
             //dummyX["X"] = QString::number(value);
 
-            qDebug() << "input: " << widget->parser.inputStr;
             widget->parser.var.variables["x"] = QString::number(value);
-            qDebug() << "size stack: " << widget->parser.mainStack.size();
-            qDebug() << "x: " << widget->parser.var.variables["x"];
-            qDebug() << "1";
-
             widget->parser.init(widget->parser.inputStr);
-            qDebug() << "2";
 
             widget->graph->addData( value, widget->parser.resultToken.getNum() );
-            qDebug() << "3";
 
-            qDebug() << "output: " << widget->parser.outputStr;
-            qDebug() << "resultToken: " << widget->parser.resultToken.getNum();
         }
-
-        qDebug() << "tick: " << tick;
-        qDebug() << "max: " << max;
-        qDebug() << "value: " << value;
+        ui->plot->replot();
 
         widget->parser.mainStackToStr();
-    //}
+    }
+}
+
+void MainWindow::updateGraphX(const QCPRange& range) {
+    auto&& axis = ui->plot->yAxis;
+
+    auto&& tickVector =axis->tickVector();
+    auto&& tickVectorIterator = tickVector.begin();
+
+    constexpr auto precision = 100;
+    const auto tick = ( *( tickVectorIterator + 1 ) - *tickVectorIterator ) / precision;
+    const auto max = ( range.upper - range.lower ) / tick;
+
+    //std::map<QString, QString> dummyX;
+
+    foreach(Widget* widget, buttonToWidget) {
+        if (widget->parser.inputType == Parser::IType::X) {
+            widget->graph->data().data()->clear();
+        }
+    }
+
+    foreach (Widget* widget, buttonToWidget) {
+        if (widget->graph->dataCount() != 0 || widget->parser.inputType != Parser::IType::X) continue;
+
+        auto value = range.lower;
+
+        for ( auto i = 0; i < max; ++i, value += tick ) {
+
+            widget->parser.var.variables["y"] = QString::number(value);
+            widget->parser.init(widget->parser.inputStr);
+
+            widget->graph->addData( widget->parser.resultToken.getNum(), value  );
+
+        }
+        ui->plot->replot();
+
+        widget->parser.mainStackToStr();
+    }
+}
+
+void MainWindow::replotGraphs() {
+    ui->plot->replot();
 }
 
 void MainWindow::on_btn_addFunc_clicked() {

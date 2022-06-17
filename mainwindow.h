@@ -34,7 +34,9 @@ private slots:
 
     void addNumberLabelX();
     void addNumberLabelY();
-    void updateGraphY(const QCPRange&, Widget*);
+    void updateGraphY(const QCPRange&);
+    void updateGraphX(const QCPRange&);
+    void replotGraphs();
 
     void tryGraph(const QCPRange&);
 
