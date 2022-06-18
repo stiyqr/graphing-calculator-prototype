@@ -19,10 +19,17 @@ MainWindow::MainWindow(QWidget *parent)
     ui->plot->xAxis2->setVisible(true);
     ui->plot->yAxis2->setVisible(true);
 
+<<<<<<< Updated upstream
     connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelX()));
     connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelY()));
     connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphY(const QCPRange&)));
     //connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphX(const QCPRange&)));
+=======
+    connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelX(const QCPRange&)));
+    connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelY(const QCPRange&)));
+    connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphY(const QCPRange&)));
+    connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphX(const QCPRange&)));
+>>>>>>> Stashed changes
     //connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(replotGraphs()));
 
 
@@ -297,7 +304,7 @@ void MainWindow::updateGraphY(const QCPRange& range) {
     auto&& tickVector =axis->tickVector();
     auto&& tickVectorIterator = tickVector.begin();
 
-    constexpr auto precision = 800;
+    constexpr auto precision = 500;
     const auto tick = ( *( tickVectorIterator + 1 ) - *tickVectorIterator ) / precision;
     const auto max = ( range.upper - range.lower ) / tick;
 
@@ -336,7 +343,7 @@ void MainWindow::updateGraphX(const QCPRange& range) {
     auto&& tickVector =axis->tickVector();
     auto&& tickVectorIterator = tickVector.begin();
 
-    constexpr auto precision = 800;
+    constexpr auto precision = 500;
     const auto tick = ( *( tickVectorIterator + 1 ) - *tickVectorIterator ) / precision;
     const auto max = ( range.upper - range.lower ) / tick;
 

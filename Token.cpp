@@ -42,6 +42,10 @@ Token::TType Token::getType() {
 
 void Token::setValue(QString input) {
     value = input;
+
+    if (isQDigit(input)) {
+        number = input.toDouble();
+    }
 }
 
 QString Token::getValue() {
