@@ -39,6 +39,8 @@ void Parser::init(QString str) {
     *this = {};
     //qDebug() << "INIT x: " << var.variables["x"];
 
+    // printing varlist for debug
+
     // remove white space from input
     inputVar = "";
     inputStr = str;
@@ -51,20 +53,23 @@ void Parser::init(QString str) {
     parseInputVar();
 
     // read input after '='
-    if (inputType == Parser::IType::X || inputType == Parser::IType::Y) {
-        //qDebug() << "ABOUT TO PARSE MAIN STRING";
-        parseMainStr();
-        readMainStack();
+    if (inputValid) {
+        if (inputType == Parser::IType::X || inputType == Parser::IType::Y) {
+            qDebug() << "ABOUT TO PARSE MAIN STRING";
+            parseMainStr();
+            if (inputValid) readMainStack();
+        }
+        else if (inputType == Parser::IType::VAR) {
+            qDebug() << "ABOUT TO SAVE VARIABLE";
+            checkVarInputValidity();
+        }
+        else {
+            inputValid = false;
+            qDebug() << "input type error, cannot parse main string";
+            outputStr = "Error: input invalid";
+        }
     }
-    else if (inputType == Parser::IType::VAR) {
-        //qDebug() << "ABOUT TO SAVE VARIABLE";
-        checkVarInputValidity();
-    }
-    else {
-        inputValid = false;
-        //qDebug() << "input type error, cannot parse main string";
-        outputStr = "Error: input invalid";
-    }
+    if (!inputValid) outputStr = "Error: input invalid";
 }
 
 void Parser::parseInputVar() {
@@ -115,21 +120,21 @@ void Parser::parseInputVar() {
 
     if (inputVar == "x" || inputVar == "X") {
         inputType = Parser::IType::X;
-        //qDebug() << "input type x";
+        qDebug() << "input type x";
     }
     else if (inputVar == "y" || inputVar == "Y") {
         inputType = Parser::IType::Y;
-        //qDebug() << "input type y";
+        qDebug() << "input type y";
     }
     else if (currentToken.isAlphabet(inputVar[0])) {
         var.variables[inputVar] = "";
         inputType = Parser::IType::VAR;
-        //qDebug() << "input type var";
+        qDebug() << "input type var";
     }
     else {
         inputType = Parser::IType::ERR;
         inputValid = false;
-        //qDebug() << "input type err";
+        qDebug() << "input type err";
     }
 }
 
@@ -145,23 +150,33 @@ void Parser::parseMainStr() {
                 negativeNum = false;
             }
 
-            //qDebug() << "push num to mainstack";
+            qDebug() << "push num to mainstack";
             break;
 
         case Token::TType::VAR:
             mainStack.emplace_back(currentToken);
-            //qDebug() << "push var to mainstack";
+            qDebug() << "push var to mainstack";
             break;
 
         case Token::TType::X:
+            if (inputType == Parser::IType::X) {
+                inputValid = false;
+                break;
+            }
+
             mainStack.emplace_back(currentToken);
-            //qDebug() << "push x to mainstack";
-            //qDebug() << "PUSHING x: " << var.variables["x"];
+            qDebug() << "push x to mainstack";
+            qDebug() << "PUSHING x: " << var.variables["x"];
             break;
 
         case Token::TType::Y:
+            if (inputType == Parser::IType::Y) {
+                inputValid = false;
+                break;
+            }
+
             mainStack.emplace_back(currentToken);
-            //qDebug() << "push y to mainstack";
+            qDebug() << "push y to mainstack";
             break;
 
         case Token::TType::OP:
@@ -172,16 +187,16 @@ void Parser::parseMainStr() {
 
                 mainStack.emplace_back(opStack.front());
                 opStack.pop_front();
-                //qDebug() << "   pop op to mainstack";
+                qDebug() << "   pop op to mainstack";
             }
 
             opStack.emplace_front(currentToken);
-            //qDebug() << "push op to opstack";
+            qDebug() << "push op to opstack";
             break;
 
         case Token::TType::LEFT_BR:
             opStack.emplace_front(currentToken);
-            //qDebug() << "push left bracket to opstack";
+            qDebug() << "push left bracket to opstack";
             break;
 
         case Token::TType::RIGHT_BR:
@@ -189,7 +204,7 @@ void Parser::parseMainStr() {
             if (inputStr[cursor-2] == '(' || inputStr[cursor-2] == '+' || inputStr[cursor-2] == '-' || inputStr[cursor-2] == '*'
                     || inputStr[cursor-2] == '/' || inputStr[cursor-2] == '^') {
                 inputValid = false;
-                //qDebug() << "Error: empty brackets";
+                qDebug() << "Error: empty brackets";
                 break;
             }
 
@@ -197,26 +212,26 @@ void Parser::parseMainStr() {
             while(opStack.front().getType() != Token::TType::LEFT_BR) {
                 if (opStack.empty()) {
                     inputValid = false;
-                    //qDebug() << "Error: no matching left brackets";
+                    qDebug() << "Error: no matching left brackets";
                     break;
                 }
                 else {
                     mainStack.emplace_back(opStack.front());
                     opStack.pop_front();
-                    //qDebug() << "   pop op inside brackets";
+                    qDebug() << "   pop op inside brackets";
                 }
             }
 
             // discard matching parentheses
             if (inputValid){
                 opStack.pop_front();
-                //qDebug() << "discard left bracket";
+                qDebug() << "discard left bracket";
 
                 // pop function beside brackets
                 if (opStack.front().getType() == Token::TType::FUNC) {
                     mainStack.emplace_back(opStack.front());
                     opStack.pop_front();
-                    //qDebug() << "   pop function to mainstack";
+                    qDebug() << "   pop function to mainstack";
                 }
             }
             break;
@@ -228,39 +243,38 @@ void Parser::parseMainStr() {
             else {
                 negativeNum = false;
             }
-            //qDebug() << "found negative sign";
+            qDebug() << "found negative sign";
             break;
 
         case Token::TType::SIGN_POS:
             // ignore positive sign
-            //qDebug() << "found positive sign";
+            qDebug() << "found positive sign";
             break;
 
         case Token::TType::FUNC:
-            if (inputStr[cursor-2] == '(' || inputStr[cursor-2] == '+' || inputStr[cursor-2] == '-' || inputStr[cursor-2] == '*'
-                    || inputStr[cursor-2] == '/' || inputStr[cursor-2] == '^') {
+            if (inputStr[cursor] != '(') {
                 inputValid = false;
-                //qDebug() << "Error: empty brackets";
+                qDebug() << "Error: has to have brackets after func";
                 break;
             }
 
             opStack.emplace_front(currentToken);
-            //qDebug() << "found function";
+            qDebug() << "found function";
             break;
 
         case Token::TType::COMMA:
             // ignore comma
-            //qDebug() << "found comma";
+            qDebug() << "found comma";
             break;
 
         case Token::TType::ERR:
             inputValid = false;
-            //qDebug() << "Error: token type error";
+            qDebug() << "Error: token type error";
             break;
 
         default:
             inputValid = false;
-            //qDebug() << "Error: default error";
+            qDebug() << "Error: default error";
             break;
         }
     }
@@ -269,14 +283,16 @@ void Parser::parseMainStr() {
     while (!opStack.empty() && inputValid) {
         if (opStack.front().getType() == Token::TType::LEFT_BR) {
             inputValid = false;
-            //qDebug() << "Error: no matching right bracket";
+            qDebug() << "Error: no matching right bracket";
             break;
         }
 
         mainStack.emplace_back(opStack.front());
         opStack.pop_front();
-        //qDebug() << "   pop op to mainstack to empty opstack";
+        qDebug() << "   pop op to mainstack to empty opstack";
     }
+
+    qDebug() << "main parse finished";
 }
 
 void Parser::mainStackToStr() {
@@ -318,11 +334,13 @@ long double Parser::readMainStack() {
     for (int i = 0; i < stackCopy.size() && inputValid && stackCopy.size() > 1; i++) {
         // found operator in mainstack
         if (stackCopy[i].getType() == Token::TType::OP) {
-            //qDebug() << "SOLVING MAINSTACK: found operator";
-            //qDebug() << "solving mainstack x: " << var.variables["x"];
+            qDebug() << "SOLVING MAINSTACK: found operator";
+            qDebug() << "solving mainstack x: " << var.variables["x"];
 
-            if (stackCopy.size() < 3) {
+            //if (stackCopy.size() < 3) {
+            if (i < 2) {
                 inputValid = false;
+                qDebug() << "stack size < 3 OP";
                 break;
             }
 
@@ -332,8 +350,18 @@ long double Parser::readMainStack() {
             num2 = stackCopy[i-1];
             op = stackCopy[i];
 
-            //qDebug() << "values num1: " << num1.getValue() << ", num2: " << num2.getValue() << ", op: " << op.getValue();
-            //qDebug() << "numbers num1: " << num1.getNum() << ", num2: " << num2.getNum() << ", op: " << op.getValue();
+            // check nums validity
+            if (num1.type != Token::TType::NUM && num1.type != Token::TType::VAR) {
+                inputValid = false;
+                break;
+            }
+            if (num2.type != Token::TType::NUM && num2.type != Token::TType::VAR) {
+                inputValid = false;
+                break;
+            }
+
+            qDebug() << "values num1: " << num1.getValue() << ", num2: " << num2.getValue() << ", op: " << op.getValue();
+            qDebug() << "numbers num1: " << num1.getNum() << ", num2: " << num2.getNum() << ", op: " << op.getValue();
 
             // do calculations
             result = calculateOp(num1, num2, op);
@@ -350,13 +378,15 @@ long double Parser::readMainStack() {
 
         // found function in mainstack
         if (stackCopy[i].getType() == Token::TType::FUNC) {
-            //qDebug() << "SOLVING MAINSTACK: found function";
-            //qDebug() << "solving mainstack x: " << var.variables["x"];
+            qDebug() << "SOLVING MAINSTACK: found function";
+            qDebug() << "solving mainstack x: " << var.variables["x"];
 
 
             Token result;
             if (stackCopy[i].getValue() == "pow") {
-                if (stackCopy.size() < 3) {
+                //if (stackCopy.size() < 3) {
+                if (i < 2) {
+                    qDebug() << "stack size < 3 FUNC";
                     inputValid = false;
                     break;
                 }
@@ -371,6 +401,16 @@ long double Parser::readMainStack() {
                 num2 = stackCopy[i-1];
                 func = stackCopy[i];
 
+                // check nums validity
+                if (num1.type != Token::TType::NUM && num1.type != Token::TType::VAR) {
+                    inputValid = false;
+                    break;
+                }
+                if (num2.type != Token::TType::NUM && num2.type != Token::TType::VAR) {
+                    inputValid = false;
+                    break;
+                }
+
 
                 // do calculations
                 result = calculateFunc(num1, num2, func);
@@ -380,8 +420,10 @@ long double Parser::readMainStack() {
                 stackCopy.erase(stackCopy.begin() + (i - 2), stackCopy.begin() + i);
             }
             else {
-                if (stackCopy.size() < 2) {
+                //if (stackCopy.size() < 2) {
+                if (i < 1) {
                     inputValid = false;
+                    qDebug() << "stack size < 2 FUNC";
                     break;
                 }
 
@@ -390,6 +432,12 @@ long double Parser::readMainStack() {
                 // pop one number before function
                 num = stackCopy[i - 1];
                 func = stackCopy[i];
+
+                // check nums validity
+                if (num.type != Token::TType::NUM && num.type != Token::TType::VAR) {
+                    inputValid = false;
+                    break;
+                }
 
                 // do calculations
                 result = calculateFunc(num, func);
@@ -413,26 +461,26 @@ long double Parser::readMainStack() {
         // variable doesn't exist
         if (it == var.variables.end()) {
             inputValid = false;
-            //qDebug() << "variable not found";
+            qDebug() << "variable not found";
         }
         else {
             stackCopy[0].setValue(it->second);
-            //qDebug() << "1.2 num1 variable, value: " << stackCopy[0].getValue() << ", number: ", stackCopy[0].getNum();
+            qDebug() << "1.2 num1 variable, value: " << stackCopy[0].getValue() << ", number: ", stackCopy[0].getNum();
         }
 
         // variable exist, calculate variable value
         varParser(stackCopy[0]);
     }
 
-    //qDebug() << "stackcopy size = " << stackCopy.size();
-    //qDebug() << "stackcopy[0] num: " << stackCopy[0].getNum() << ", value: " << stackCopy[0].getValue();
+    qDebug() << "stackcopy size = " << stackCopy.size();
+    qDebug() << "stackcopy[0] num: " << stackCopy[0].getNum() << ", value: " << stackCopy[0].getValue();
 
     resultToken = stackCopy[0];
     return resultToken.getNum();
 }
 
 Token Parser::calculateOp(Token num1, Token num2, Token op) {
-    //qDebug() << "SOLVING OPERATOR";
+    qDebug() << "SOLVING OPERATOR";
 
     Token result;
 
@@ -469,7 +517,7 @@ Token Parser::calculateOp(Token num1, Token num2, Token op) {
 
     // if num is variable, solve num
     if (num1.getType() == Token::TType::VAR) {
-        //qDebug() << "1. num1 variable, value: " << num1.getValue() << ", number: ", num1.getNum();
+        qDebug() << "1. num1 variable, value: " << num1.getValue() << ", number: ", num1.getNum();
 
         // check if variable exist
         auto it = var.variables.find(num1.getValue());
@@ -478,11 +526,11 @@ Token Parser::calculateOp(Token num1, Token num2, Token op) {
         if (it == var.variables.end()) {
             inputValid = false;
             return result;
-            //qDebug() << "variable not found";
+            qDebug() << "variable not found";
         }
         else {
             num1.setValue(it->second);
-            //qDebug() << "1.2 num1 variable, value: " << num1.getValue() << ", number: ", num1.getNum();
+            qDebug() << "1.2 num1 variable, value: " << num1.getValue() << ", number: ", num1.getNum();
         }
 
         // variable exist, calculate variable value
@@ -678,15 +726,15 @@ void Parser::checkVarInputValidity() {
     readMainStack();
     if (inputValid) {
         var.variables[inputVar] = QString::fromStdString(inputStr.toStdString().substr(varCursor));
-        //qDebug() << "variable input valid";
-        //qDebug() << "variable input: " << var.variables[inputVar];
-        //qDebug() << "string input: " << QString::fromStdString(inputStr.toStdString().substr(varCursor));
-        //qDebug() << "string input: " << inputStr;
-        //qDebug() << "cursor pos: " << varCursor;
+        qDebug() << "variable input valid";
+        qDebug() << "variable input: " << var.variables[inputVar];
+        qDebug() << "string input: " << QString::fromStdString(inputStr.toStdString().substr(varCursor));
+        qDebug() << "string input: " << inputStr;
+        qDebug() << "cursor pos: " << varCursor;
     }
     else {
         outputStr = "Error: Variable input invalid";
-        //qDebug() << "variable input invalid";
+        qDebug() << "variable input invalid";
     }
 }
 
@@ -721,6 +769,7 @@ void Parser::varParser(Token& var) {
                 qDebug() << "Error: token type error, variable loop";
                 qDebug() << "varStr: " << varStr;
                 qDebug() << "token value: " << currentToken.getValue();
+                qDebug() << "inputVar: " << inputVar;
                 break;
             }
 

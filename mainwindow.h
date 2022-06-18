@@ -20,10 +20,10 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void    addWidget();
-    void    removeWidget();
-    void    hideWidget();
-    void    readInput();
+    void addWidget();
+    void removeWidget();
+    void hideWidget();
+    void readInput();
 
     void setGraphWindow();
 
@@ -32,17 +32,20 @@ public:
 private slots:
     void on_btn_addFunc_clicked();
 
-    void addNumberLabelX();
-    void addNumberLabelY();
+    void addNumberLabelX(const QCPRange&);
+    void addNumberLabelY(const QCPRange&);
     void updateGraphY(const QCPRange&);
     void updateGraphX(const QCPRange&);
     void replotGraphs();
 
     void tryGraph(const QCPRange&);
+    void displayVarList();
+    void displayOutput();
 
 private:
     Ui::MainWindow *ui;
 
+    QVector<Widget*>             vWidget;
     QHash<QToolButton*, Widget*> buttonToWidget;
     QHash<QToolButton*, bool>    hiddenList;
 

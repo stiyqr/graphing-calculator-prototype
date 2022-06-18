@@ -19,16 +19,15 @@ MainWindow::MainWindow(QWidget *parent)
     ui->plot->xAxis2->setVisible(true);
     ui->plot->yAxis2->setVisible(true);
 
-    connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelX()));
-    connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelY()));
-    connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphY(const QCPRange&)));
+    connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelX(const QCPRange&)));
+    connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelY(const QCPRange&)));
+    //connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphY(const QCPRange&)));
     //connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphX(const QCPRange&)));
     //connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(replotGraphs()));
 
 
     /////////////////////////////////////////////// try area ///////////////////////////////////////////////
 
-    graph = ui->plot->addGraph();
     //connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(tryGraph(const QCPRange&)));
     /*QCPGraph* graph = ui->plot->addGraph();
 
@@ -90,6 +89,8 @@ void MainWindow::addWidget() {
 
     layout->insertLayout(0, widget->subLayout);
 
+    //vWidget.emplace_back(widget);
+
     buttonToWidget.insert(widget->buttonRm, widget);
     buttonToWidget.insert(widget->buttonHd, widget);
     buttonToWidget.insert(widget->buttonEn, widget);
@@ -98,47 +99,93 @@ void MainWindow::addWidget() {
     QObject::connect(widget->buttonRm, &QToolButton::clicked, this, &MainWindow::removeWidget);
     QObject::connect(widget->buttonHd, &QToolButton::clicked, this, &MainWindow::hideWidget);
     QObject::connect(widget->buttonEn, &QToolButton::clicked, this, &MainWindow::readInput);
+
+    QObject::connect(widget->buttonEn, &QToolButton::clicked, this, &MainWindow::displayVarList);
+    QObject::connect(widget->buttonEn, &QToolButton::clicked, this, &MainWindow::displayOutput);
+
+    QObject::connect(widget->buttonRm, &QToolButton::clicked, this, &MainWindow::displayVarList);
 }
 
 void MainWindow::removeWidget() {
     QToolButton* button = qobject_cast<QToolButton*>(sender());
-    Widget* widget = buttonToWidget.value(button);
-    QHBoxLayout* layout = buttonToWidget.take(button)->subLayout;
+    qDebug() << "obtain remove sender";
+    //auto it = std::find_if(vWidget.begin(), vWidget.end(), [&](Widget* widget) {return widget->buttonRm == button;});
+    //auto widget = *it;
+
+    /*if (it != vWidget.end()) {
+        vWidget.erase(it);
+        //delete *it;
+    }*/
+
+    //std::remove_if(vWidget.begin(), vWidget.end(), [&](Widget* widget) {return widget->buttonRm == button;});
+
+    Widget* widget = buttonToWidget.take(button);
+    QHBoxLayout* layout = widget->subLayout;
+    qDebug() << "assign widget and layout";
 
     // delete variable
     if (widget->parser.inputType == Parser::IType::VAR) {
         auto it = widget->parser.var.variables.find(widget->parser.inputVar);
         if ( it != widget->parser.var.variables.end()) {
+            qDebug() << "found var to be deleted, var: " << it->first;
             widget->parser.var.variables.erase(it);
         }
     }
+    qDebug() << "deleted variable";
 
     // delete widget
     while (layout->count() != 0) {
         QLayoutItem* item = layout->takeAt(0);
+
         delete item->widget();
         delete item;
     }
     delete layout;
+    qDebug() << "deleted layout";
+
+    // delete graph
+    if (widget->parser.inputType == Parser::IType::Y || widget->parser.inputType == Parser::IType::X) {
+        widget->graph->setVisible(false);
+        widget->graph->data().data()->clear();
+        qDebug() << "deleted a graph";
+    }
+    ui->plot->replot();
+    qDebug() << "deleted graph";
+
+    //std::remove_if(buttonToWidget.begin(), buttonToWidget.end(), [&](Widget* _widget) {return _widget == _widget;});
 }
 
 void MainWindow::hideWidget() {
     QToolButton* button = qobject_cast<QToolButton*>(sender());
+    Widget* widget = buttonToWidget.value(button);
+    qDebug() << "obtain hide sender";
+
+    //auto it = std::find_if(vWidget.begin(), vWidget.end(), [&](Widget* widget) {return widget->buttonRm == button;});
+    //auto widget = *it;
 
     auto&& hidden = hiddenList[button];
     hidden = !hidden;
 
     if (hidden) {
         button->setIcon(QIcon("../assets/icon-hidden.png"));
+        widget->graph->setVisible(false);
+        ui->plot->replot();
     }
     else {
         button->setIcon(QIcon("../assets/icon-hide.png"));
+        widget->graph->setVisible(true);
+        ui->plot->replot();
     }
 }
 
 void MainWindow::readInput() {
     QToolButton* button = qobject_cast<QToolButton*>(sender());
     Widget* widget = buttonToWidget.value(button);
+    qDebug() << "obtain read sender";
+
+    //auto it = std::find_if(vWidget.begin(), vWidget.end(), [&](Widget* widget) {return widget->buttonEn == button;});
+    //if (it == vWidget.end()) return;
+    //auto widget = *it;
 
     inputStr = widget->txt_inputBar->text();
     widget->parser.var.variables["x"] = "0";
@@ -146,9 +193,10 @@ void MainWindow::readInput() {
     widget->parser.init(inputStr);
 
     outputStr = widget->parser.getOutputStr();
-    //qDebug() << "   input: " << inputStr;
-    //qDebug() << "   output: " << outputStr;
-    //qDebug() << "   resultToken: " << widget->parser.resultToken.getNum();
+    qDebug() << "   init done";
+    qDebug() << "   input: " << inputStr;
+    qDebug() << "   output: " << outputStr;
+    qDebug() << "   resultToken: " << widget->parser.resultToken.getNum();
 
     if (outputStr == "Error: input invalid" || widget->parser.inputValid == false) {
         widget->buttonCol->setStyleSheet({"color: red"});
@@ -219,11 +267,34 @@ void MainWindow::tryGraph(const QCPRange& range) {
         graph->addData( value, qSin( value ) );
 }
 
-void MainWindow::addNumberLabelX() {
+void MainWindow::displayVarList() {
+    QToolButton* button = qobject_cast<QToolButton*>(sender());
+    Widget* widget = buttonToWidget.value(button);
+
+    QString finalStr = "";
+    for (auto&& [key, value] : widget->parser.var.variables) {
+        QString outputStr = key + " = " + value + "\n";
+        finalStr += outputStr;
+    }
+    ui->txt_varlist->setPlainText(finalStr);
+}
+
+void MainWindow::displayOutput() {
+    QToolButton* button = qobject_cast<QToolButton*>(sender());
+    Widget* widget = buttonToWidget.value(button);
+
+    QString outputStr = widget->parser.outputStr;
+    QString outputNum = QString::number(widget->parser.resultToken.getNum());
+
+    ui->txt_output->setPlainText("outputstr: " + outputStr + ", num: " + outputNum);
+}
+
+void MainWindow::addNumberLabelX(const QCPRange& range) {
     static QVector<QCPItemText*> numLabelx;
 
-    while (!numLabelx.empty()) {
-        delete numLabelx[numLabelx.size()-1];
+    while (!numLabelx.isEmpty()) {
+        ui->plot->removeItem(numLabelx.back());
+        //delete numLabelx.back();
         numLabelx.pop_back();
     }
 
@@ -243,15 +314,17 @@ void MainWindow::addNumberLabelX() {
         numLabelx.back()->position->setCoords(*tickVectorIterator, 0);
         numLabelx.back()->setText(*tickVectorLabelsIterator);
     }
+    ui->plot->replot();
 }
 
-void MainWindow::addNumberLabelY() {
+void MainWindow::addNumberLabelY(const QCPRange& range) {
     //ui->plot->yAxis->setScaleRatio(ui->plot->xAxis, 1.0);
 
     static QVector<QCPItemText*> numLabely;
 
-    while (!numLabely.empty()) {
-        delete numLabely[numLabely.size()-1];
+    while (!numLabely.isEmpty()) {
+        ui->plot->removeItem(numLabely.back());
+        //delete numLabely.back();
         numLabely.pop_back();
     }
 
@@ -289,9 +362,12 @@ void MainWindow::addNumberLabelY() {
         numLabely.back()->position->setCoords(0, *tickVectorIterator);
         numLabely.back()->setText(*tickVectorLabelsIterator);
     }
+    ui->plot->replot();
 }
 
 void MainWindow::updateGraphY(const QCPRange& range) {
+    qDebug() << "ENTER update graph y";
+
     auto&& axis = ui->plot->xAxis;
 
     auto&& tickVector =axis->tickVector();
@@ -319,18 +395,23 @@ void MainWindow::updateGraphY(const QCPRange& range) {
             //dummyX["X"] = QString::number(value);
 
             widget->parser.var.variables["x"] = QString::number(value);
+            qDebug() << "variable[x]" << widget->parser.var.variables["x"];
+            qDebug() << "input: " << inputStr;
+            qDebug() << "output: " << outputStr;
+            qDebug() << "resultToken: " << widget->parser.resultToken.getNum();
+
             widget->parser.init(widget->parser.inputStr);
 
             widget->graph->addData( value, widget->parser.resultToken.getNum() );
 
         }
         ui->plot->replot();
-
-        widget->parser.mainStackToStr();
     }
 }
 
 void MainWindow::updateGraphX(const QCPRange& range) {
+    qDebug() << "ENTER update graph x";
+
     auto&& axis = ui->plot->yAxis;
 
     auto&& tickVector =axis->tickVector();
