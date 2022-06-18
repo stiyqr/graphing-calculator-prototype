@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <QDebug>
 
 #include "Token.h"
 
@@ -105,6 +104,7 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
         }
         else {
             type = Token::TType::VAR;
+            //varName = value;
         }
 
         return type;
@@ -179,6 +179,7 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
         return type;
     }
 
+    cursor++;
     return Token::TType::ERR;
 }
 
@@ -217,7 +218,6 @@ bool Token::isQDigit(QString input) {
             return false;
         }
     }
-
     return true;
 }
 

@@ -14,9 +14,10 @@ public:
         RIGHT, LEFT, FUNC
     };
 
-private:
+public:
     TType   type;
     QString value;
+    //QString varName;
     double  number;
     int     precedence;
     ASOC    associative;

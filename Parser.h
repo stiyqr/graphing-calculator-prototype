@@ -16,8 +16,8 @@ public:
 
 public:
     std::deque<Token> mainStack, opStack;
-    int     cursor = 0;
-    Token   currentToken, resultToken;
+    int               cursor = 0;
+    Token             currentToken, resultToken;
 
     QString inputStr;
     QString inputVar;
@@ -36,6 +36,7 @@ public:
     void    init(QString);
     void    parseInputVar();
     void    parseMainStr();
+    void    parseMainStrForVar(QString);
     void    mainStackToStr();
     void    resultToStr();
     QString getOutputStr();

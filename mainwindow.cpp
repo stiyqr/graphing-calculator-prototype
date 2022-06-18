@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelX()));
     connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(addNumberLabelY()));
     connect(ui->plot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphY(const QCPRange&)));
-    connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphX(const QCPRange&)));
+    //connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateGraphX(const QCPRange&)));
     //connect(ui->plot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(replotGraphs()));
 
 
@@ -146,11 +146,11 @@ void MainWindow::readInput() {
     widget->parser.init(inputStr);
 
     outputStr = widget->parser.getOutputStr();
-    qDebug() << "   input: " << inputStr;
-    qDebug() << "   output: " << outputStr;
-    qDebug() << "   resultToken: " << widget->parser.resultToken.getNum();
+    //qDebug() << "   input: " << inputStr;
+    //qDebug() << "   output: " << outputStr;
+    //qDebug() << "   resultToken: " << widget->parser.resultToken.getNum();
 
-    if (outputStr == "Error: input invalid") {
+    if (outputStr == "Error: input invalid" || widget->parser.inputValid == false) {
         widget->buttonCol->setStyleSheet({"color: red"});
         widget->buttonCol->setText("X");
     }
@@ -297,7 +297,7 @@ void MainWindow::updateGraphY(const QCPRange& range) {
     auto&& tickVector =axis->tickVector();
     auto&& tickVectorIterator = tickVector.begin();
 
-    constexpr auto precision = 100;
+    constexpr auto precision = 800;
     const auto tick = ( *( tickVectorIterator + 1 ) - *tickVectorIterator ) / precision;
     const auto max = ( range.upper - range.lower ) / tick;
 
@@ -336,7 +336,7 @@ void MainWindow::updateGraphX(const QCPRange& range) {
     auto&& tickVector =axis->tickVector();
     auto&& tickVectorIterator = tickVector.begin();
 
-    constexpr auto precision = 100;
+    constexpr auto precision = 800;
     const auto tick = ( *( tickVectorIterator + 1 ) - *tickVectorIterator ) / precision;
     const auto max = ( range.upper - range.lower ) / tick;
 
