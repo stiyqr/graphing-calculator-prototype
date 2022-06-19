@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <QDebug>
 
 #include "Token.h"
 
@@ -42,6 +43,10 @@ Token::TType Token::getType() {
 
 void Token::setValue(QString input) {
     value = input;
+
+    if (isQDigit(input)) {
+        number = input.toDouble();
+    }
 }
 
 QString Token::getValue() {
@@ -57,9 +62,13 @@ double Token::getNum() {
 }
 
 Token::TType Token::getNextToken(QString input, int& cursor) {
+    qDebug() << "enter getnexttoken : " << input[cursor];
+    qDebug() << "token input: " << input << ", cursor: " << cursor;
+
     value = "";
 
     if (input[cursor].isDigit() || input[cursor] == '.') {
+        qDebug() << "TOKEN: digit or dot";
         type = Token::TType::NUM;
         int dotCount = 0;
 
@@ -72,6 +81,7 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
                 type = Token::TType::ERR;
                 return type;
             }
+            qDebug() << "TOKEN: found num";
 
             value += input[i];
             cursor++;
@@ -82,6 +92,7 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
     }
 
     if (isAlphabet(input[cursor])) {
+        qDebug() << "TOKEN: alphabet";
         for (int i = cursor; i < input.length() && (isAlphabet(input[i]) || input[i].isDigit()); i++) {
             value += input[i];
             cursor++;
@@ -127,6 +138,7 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
     }
 
     if (input[cursor] == '*' || input[cursor] == '/' || input[cursor] == '^') {
+        qDebug() << "TOKEN: op";
         type = Token::TType::OP;
 
         // input value and precedence
@@ -147,26 +159,31 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
 
 
     if (input[cursor] == '+' || input[cursor] == '-') {
+        qDebug() << "TOKEN: plus minus";
         // check if +- is operator
-        if (input[cursor - 1] == ')' || input[cursor - 1].isDigit() || isAlphabet(input[cursor - 1])) {
-            type = Token::TType::OP;
+        if (cursor >= 1) {
+            if (input[cursor - 1] == ')' || input[cursor - 1].isDigit() || isAlphabet(input[cursor - 1])) {
+                type = Token::TType::OP;
 
-            // input value and precedence and associativity
-            value += input[cursor];
-            setPrecedence();
-            associative = ASOC::LEFT;
+                // input value and precedence and associativity
+                value += input[cursor];
+                setPrecedence();
+                associative = ASOC::LEFT;
 
-            cursor++;
-            return type;
+                //qDebug() << "returning to parser";
+                cursor++;
+                return type;
+            }
         }
-
         // +- is sign
         if (input[cursor] == '-') {
             type = Token::TType::SIGN_NEG;
+            //qDebug() << "TOKEN: found neg sign";
         }
         else {
             type = Token::TType::SIGN_POS;
         }
+        //qDebug() << "returning to parser";
         value += input[cursor];
         cursor++;
         return type;
@@ -179,6 +196,7 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
         return type;
     }
 
+    qDebug() << "TOKEN: error";
     cursor++;
     return Token::TType::ERR;
 }
