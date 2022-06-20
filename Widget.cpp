@@ -2,6 +2,8 @@
 
 
 Widget::Widget(QCustomPlot* _plot) {
+    qDebug() << "widget created";
+
     subLayout = new QHBoxLayout();
 
     buttonCol = new QToolButton();
@@ -35,6 +37,8 @@ Widget::Widget(QCustomPlot* _plot) {
 }
 
 Widget::~Widget() {
+    qDebug() << "widget destroyed";
+
     // delete variable
     /*QString str = txt_inputBar->text(), varCheck = "";
     for (int i = 0; i < str.length(); i++) {

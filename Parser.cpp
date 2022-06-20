@@ -135,7 +135,7 @@ void Parser::parseInputVar() {
         //qDebug() << "input type y";
     }
     else if (currentToken.isAlphabet(inputVar[0])) {
-        var.variables[inputVar] = "";
+        //var.variables[inputVar] = "";
         inputType = Parser::IType::VAR;
         //qDebug() << "input type var";
     }
@@ -329,7 +329,7 @@ long double Parser::readMainStack() {
     // copy main stack to not change the stack
     std::deque<Token> stackCopy = mainStack;
 
-    for (int i = 0; i < stackCopy.size() && inputValid && stackCopy.size() > 1; i++) {
+    for (std::deque<Token>::size_type i = 0; i < stackCopy.size() && inputValid && stackCopy.size() > 1; i++) {
         qDebug() << "reading mainstack... inputStr: " << inputStr;
 
         // found operator in mainstack
@@ -719,9 +719,9 @@ void Parser::checkVarInputValidity() {
     }
 }
 
-void Parser::varParser(Token& var) {
+void Parser::varParser(Token& varToken) {
     std::deque<Token>varMainstack, varOpstack;
-    QString varStr = var.getValue();
+    QString varStr = varToken.getValue();
     int varCursor = 0;
 
     if (varStr == "") {
@@ -887,8 +887,8 @@ void Parser::varParser(Token& var) {
     qDebug() << "VarParser DONE: varmainstack[0]: " << varMainstack[0].getNum();
 
     Token temp = varReader(varMainstack);
-    var.assignNum(temp.getNum());
-    var.setValue(temp.getValue());
+    varToken.assignNum(temp.getNum());
+    varToken.setValue(temp.getValue());
 
     qDebug() << "VarReader DONE: temp.getnum: " << temp.getNum();
 }
@@ -982,7 +982,7 @@ Token Parser::varReader(std::deque<Token>& varMainstack) {
         // variable exists
         else {
             qDebug() << "2.1 num1 variable, it->first: " << it->first << ", second: " << it->second;
-            stackCopy[0].setValue(it->second);
+            if (inputValid) stackCopy[0].setValue(it->second);
             qDebug() << "2.2 num1 variable, value: " << stackCopy[0].getValue() << ", number: ", stackCopy[0].getNum();
             qDebug() << "2.2 num1 variable, it->first: " << it->first << ", second: " << it->second;
         }
