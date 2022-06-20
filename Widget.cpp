@@ -1,10 +1,33 @@
 #include "Widget.h"
 
 
-Widget::Widget(QCustomPlot* _plot) {
+Widget::Widget(QCustomPlot* _plot, QVBoxLayout* _layout) : layout{_layout} {
     qDebug() << "widget created";
 
-    subLayout = new QHBoxLayout();
+    buttonCol    = decltype(buttonCol)::create();
+    txt_inputBar = decltype(txt_inputBar)::create();
+    buttonEn     = decltype(buttonEn)::create();
+    buttonHd     = decltype(buttonHd)::create();
+    buttonRm     = decltype(buttonRm)::create();
+    subLayout    = decltype(subLayout)::create();
+
+    buttonCol->setStyleSheet({randomColor()});
+    buttonEn->setIcon(QIcon("../assets/icon-enter.png"));
+    buttonHd->setIcon(QIcon("../assets/icon-hide.png"));
+    buttonRm->setIcon(QIcon("../assets/icon-remove.png"));
+    txt_inputBar->setText("y=");
+
+    graph = _plot->addGraph();
+
+    subLayout->setAlignment(Qt::AlignLeft);
+
+    subLayout->addWidget(buttonCol.data());
+    subLayout->addWidget(txt_inputBar.data());
+    subLayout->addWidget(buttonEn.data());
+    subLayout->addWidget(buttonHd.data());
+    subLayout->addWidget(buttonRm.data());
+
+    /*subLayout = new QHBoxLayout();
 
     buttonCol = new QToolButton();
     buttonCol->setStyleSheet({randomColor()});
@@ -27,7 +50,7 @@ Widget::Widget(QCustomPlot* _plot) {
     subLayout->addWidget(buttonRm);
 
     plot = _plot;
-    graph = plot->addGraph();
+    graph = plot->addGraph();*/
 
     // set graph color
     QPen pen;
@@ -38,6 +61,25 @@ Widget::Widget(QCustomPlot* _plot) {
 
 Widget::~Widget() {
     qDebug() << "widget destroyed";
+
+    subLayout->removeWidget(buttonCol.data());
+    subLayout->removeWidget(txt_inputBar.data());
+    subLayout->removeWidget(buttonEn.data());
+    subLayout->removeWidget(buttonHd.data());
+    subLayout->removeWidget(buttonRm.data());
+
+    layout->removeItem(subLayout.data());
+
+    graph->parentPlot()->removeGraph(graph);
+
+    // delete variable
+    if (parser.inputType == Parser::IType::VAR) {
+        auto it = parser.var.variables.find(parser.inputVar);
+        if ( it != parser.var.variables.end()) {
+            ////qDebug() << "found var to be deleted, var: " << it->first;
+            parser.var.variables.erase(it);
+        }
+    }
 
     // delete variable
     /*QString str = txt_inputBar->text(), varCheck = "";

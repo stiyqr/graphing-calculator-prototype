@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     setGraphWindow();
+    ui->vLayout->setAlignment(Qt::AlignTop);
 
     ui->plot->xAxis->setTicks(false);
     ui->plot->yAxis->setTicks(false);
@@ -83,31 +84,34 @@ void MainWindow::addWidget() {
     QObject::connect(button, &QPushButton::clicked, this, &MainWindow::removeWidget);*/
 
     qDebug() << "about to add widget";
-    QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(ui->vLayout);
+    //QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(ui->vLayout);
+    QVBoxLayout* layout = ui->vLayout;
+    layout->setAlignment(Qt::AlignTop);
     //QHBoxLayout* subLayout = new QHBoxLayout();
 
     ////qDebug() << "new widget";
-    Widget* widget = new Widget{ui->plot};
+    Widget* widget = new Widget{ui->plot, layout};
 
     ////qDebug() << "insert layout";
-    layout->insertLayout(0, widget->subLayout);
+    //layout->insertLayout(0, widget->subLayout);
+    layout->addLayout(widget->subLayout.data());
 
     //vWidget.emplace_back(widget);
 
     ////qDebug() << "insert buttons";
-    buttonToWidget.insert(widget->buttonRm, widget);
-    buttonToWidget.insert(widget->buttonHd, widget);
-    buttonToWidget.insert(widget->buttonEn, widget);
-    hiddenList.insert(widget->buttonHd, false);
+    buttonToWidget.insert(widget->buttonRm.data(), widget);
+    buttonToWidget.insert(widget->buttonHd.data(), widget);
+    buttonToWidget.insert(widget->buttonEn.data(), widget);
+    hiddenList.insert(widget->buttonHd.data(), false);
 
-    QObject::connect(widget->buttonRm, &QToolButton::clicked, this, &MainWindow::removeWidget);
-    QObject::connect(widget->buttonHd, &QToolButton::clicked, this, &MainWindow::hideWidget);
-    QObject::connect(widget->buttonEn, &QToolButton::clicked, this, &MainWindow::readInput);
+    QObject::connect(widget->buttonRm.data(), &QToolButton::clicked, this, &MainWindow::removeWidget);
+    QObject::connect(widget->buttonHd.data(), &QToolButton::clicked, this, &MainWindow::hideWidget);
+    QObject::connect(widget->buttonEn.data(), &QToolButton::clicked, this, &MainWindow::readInput);
 
-    QObject::connect(widget->buttonEn, &QToolButton::clicked, this, &MainWindow::displayVarList);
-    QObject::connect(widget->buttonEn, &QToolButton::clicked, this, &MainWindow::displayOutput);
+    QObject::connect(widget->buttonEn.data(), &QToolButton::clicked, this, &MainWindow::displayVarList);
+    QObject::connect(widget->buttonEn.data(), &QToolButton::clicked, this, &MainWindow::displayOutput);
 
-    QObject::connect(widget->buttonRm, &QToolButton::clicked, this, &MainWindow::displayVarList);
+    QObject::connect(widget->buttonRm.data(), &QToolButton::clicked, this, &MainWindow::displayVarList);
 }
 
 void MainWindow::removeWidget() {
@@ -124,6 +128,14 @@ void MainWindow::removeWidget() {
     //std::remove_if(vWidget.begin(), vWidget.end(), [&](Widget* widget) {return widget->buttonRm == button;});
 
     Widget* widget = buttonToWidget.take(button);
+    buttonToWidget.take(widget->buttonHd.data());
+    buttonToWidget.take(widget->buttonEn.data());
+    hiddenList.take(widget->buttonHd.data());
+    delete widget;
+
+    ui->plot->replot(QCustomPlot::rpImmediateRefresh);
+
+    /*
     QHBoxLayout* layout = widget->subLayout;
     ////qDebug() << "assign widget and layout";
 
@@ -145,6 +157,7 @@ void MainWindow::removeWidget() {
         delete item;
     }
     delete layout;
+
     ////qDebug() << "deleted layout";
 
     // delete graph
@@ -156,6 +169,7 @@ void MainWindow::removeWidget() {
     }
     ui->plot->replot();
     ////qDebug() << "deleted graph";
+    */
 
     //std::remove_if(buttonToWidget.begin(), buttonToWidget.end(), [&](Widget* _widget) {return _widget == _widget;});
 }
@@ -174,13 +188,13 @@ void MainWindow::hideWidget() {
     if (hidden) {
         button->setIcon(QIcon("../assets/icon-hidden.png"));
         widget->graph->setVisible(false);
-        ui->plot->replot();
+        ui->plot->replot(QCustomPlot::rpImmediateRefresh);
         ////qDebug() << "hide widget";
     }
     else {
         button->setIcon(QIcon("../assets/icon-hide.png"));
         widget->graph->setVisible(true);
-        ui->plot->replot();
+        ui->plot->replot(QCustomPlot::rpImmediateRefresh);
         ////qDebug() << "unhide widget";
     }
 }

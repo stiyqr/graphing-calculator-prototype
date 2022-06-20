@@ -8,15 +8,18 @@
 
 class Widget {
 public:
-    QToolButton* buttonCol;
-    QLineEdit*   txt_inputBar;
-    QToolButton* buttonEn;
-    QToolButton* buttonHd;
-    QToolButton* buttonRm;
-    QCPGraph*    graph;
-    QCustomPlot* plot;
+    QSharedPointer<QToolButton> buttonCol;
+    QSharedPointer<QLineEdit>   txt_inputBar;
+    QSharedPointer<QToolButton> buttonEn;
+    QSharedPointer<QToolButton> buttonHd;
+    QSharedPointer<QToolButton> buttonRm;
+    QCPGraph*                   graph;
+    QSharedPointer<QHBoxLayout> subLayout;
 
-    QHBoxLayout* subLayout;
+    QVBoxLayout* layout;
+
+    //QCustomPlot* plot;
+
 
     QString color;
     int     rgb1, rgb2, rgb3;
@@ -26,7 +29,7 @@ public:
 
 public:
     Widget(){}
-    Widget(QCustomPlot*);
+    Widget(QCustomPlot*, QVBoxLayout*);
     ~Widget();
 
     QString randomColor();
