@@ -63,12 +63,12 @@ double Token::getNum() {
 
 Token::TType Token::getNextToken(QString input, int& cursor) {
     qDebug() << "enter getnexttoken : " << input[cursor];
-    qDebug() << "token input: " << input << ", cursor: " << cursor;
+    ////qDebug() << "token input: " << input << ", cursor: " << cursor;
 
     value = "";
 
     if (input[cursor].isDigit() || input[cursor] == '.') {
-        qDebug() << "TOKEN: digit or dot";
+        ////qDebug() << "TOKEN: digit or dot";
         type = Token::TType::NUM;
         int dotCount = 0;
 
@@ -81,7 +81,7 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
                 type = Token::TType::ERR;
                 return type;
             }
-            qDebug() << "TOKEN: found num";
+            ////qDebug() << "TOKEN: found num";
 
             value += input[i];
             cursor++;
@@ -92,7 +92,7 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
     }
 
     if (isAlphabet(input[cursor])) {
-        qDebug() << "TOKEN: alphabet";
+        ////qDebug() << "TOKEN: alphabet";
         for (int i = cursor; i < input.length() && (isAlphabet(input[i]) || input[i].isDigit()); i++) {
             value += input[i];
             cursor++;
@@ -138,7 +138,7 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
     }
 
     if (input[cursor] == '*' || input[cursor] == '/' || input[cursor] == '^') {
-        qDebug() << "TOKEN: op";
+        ////qDebug() << "TOKEN: op";
         type = Token::TType::OP;
 
         // input value and precedence
@@ -159,7 +159,7 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
 
 
     if (input[cursor] == '+' || input[cursor] == '-') {
-        qDebug() << "TOKEN: plus minus";
+        ////qDebug() << "TOKEN: plus minus";
         // check if +- is operator
         if (cursor >= 1) {
             if (input[cursor - 1] == ')' || input[cursor - 1].isDigit() || isAlphabet(input[cursor - 1])) {
@@ -196,7 +196,7 @@ Token::TType Token::getNextToken(QString input, int& cursor) {
         return type;
     }
 
-    qDebug() << "TOKEN: error";
+    ////qDebug() << "TOKEN: error";
     cursor++;
     return Token::TType::ERR;
 }

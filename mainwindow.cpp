@@ -86,15 +86,15 @@ void MainWindow::addWidget() {
     QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(ui->vLayout);
     //QHBoxLayout* subLayout = new QHBoxLayout();
 
-    qDebug() << "new widget";
+    ////qDebug() << "new widget";
     Widget* widget = new Widget{ui->plot};
 
-    qDebug() << "insert layout";
+    ////qDebug() << "insert layout";
     layout->insertLayout(0, widget->subLayout);
 
     //vWidget.emplace_back(widget);
 
-    qDebug() << "insert buttons";
+    ////qDebug() << "insert buttons";
     buttonToWidget.insert(widget->buttonRm, widget);
     buttonToWidget.insert(widget->buttonHd, widget);
     buttonToWidget.insert(widget->buttonEn, widget);
@@ -125,17 +125,17 @@ void MainWindow::removeWidget() {
 
     Widget* widget = buttonToWidget.take(button);
     QHBoxLayout* layout = widget->subLayout;
-    qDebug() << "assign widget and layout";
+    ////qDebug() << "assign widget and layout";
 
     // delete variable
     if (widget->parser.inputType == Parser::IType::VAR) {
         auto it = widget->parser.var.variables.find(widget->parser.inputVar);
         if ( it != widget->parser.var.variables.end()) {
-            qDebug() << "found var to be deleted, var: " << it->first;
+            ////qDebug() << "found var to be deleted, var: " << it->first;
             widget->parser.var.variables.erase(it);
         }
     }
-    qDebug() << "deleted variable";
+    ////qDebug() << "deleted variable";
 
     // delete widget
     while (layout->count() != 0) {
@@ -145,16 +145,17 @@ void MainWindow::removeWidget() {
         delete item;
     }
     delete layout;
-    qDebug() << "deleted layout";
+    ////qDebug() << "deleted layout";
 
     // delete graph
     if (widget->parser.inputType == Parser::IType::Y || widget->parser.inputType == Parser::IType::X) {
         widget->graph->setVisible(false);
         widget->graph->data().data()->clear();
-        qDebug() << "deleted a graph";
+        //widget->graph->parentPlot()->removeGraph(widget->graph);
+        ////qDebug() << "deleted a graph";
     }
     ui->plot->replot();
-    qDebug() << "deleted graph";
+    ////qDebug() << "deleted graph";
 
     //std::remove_if(buttonToWidget.begin(), buttonToWidget.end(), [&](Widget* _widget) {return _widget == _widget;});
 }
@@ -174,13 +175,13 @@ void MainWindow::hideWidget() {
         button->setIcon(QIcon("../assets/icon-hidden.png"));
         widget->graph->setVisible(false);
         ui->plot->replot();
-        qDebug() << "hide widget";
+        ////qDebug() << "hide widget";
     }
     else {
         button->setIcon(QIcon("../assets/icon-hide.png"));
         widget->graph->setVisible(true);
         ui->plot->replot();
-        qDebug() << "unhide widget";
+        ////qDebug() << "unhide widget";
     }
 }
 
@@ -199,31 +200,37 @@ void MainWindow::readInput() {
     widget->parser.init(inputStr);
 
     outputStr = widget->parser.getOutputStr();
-    qDebug() << "   init done";
-    qDebug() << "   input: " << inputStr;
-    qDebug() << "   output: " << outputStr;
-    qDebug() << "   resultToken: " << widget->parser.resultToken.getNum();
+    ////qDebug() << "   init done";
+    ////qDebug() << "   input: " << inputStr;
+    ////qDebug() << "   output: " << outputStr;
+    ////qDebug() << "   resultToken: " << widget->parser.resultToken.getNum();
 
     if (outputStr == "Error: input invalid" || widget->parser.inputValid == false) {
-        qDebug() << "input invalid";
+        ////qDebug() << "input invalid";
 
         widget->buttonCol->setStyleSheet({"color: red"});
         widget->buttonCol->setText("X");
+        widget->graph->setVisible(false);
+        ui->plot->replot();
 
-        qDebug() << "displayed invalid icon";
+        ////qDebug() << "displayed invalid icon";
     }
     else {
         widget->buttonCol->setText("");
         widget->buttonCol->setStyleSheet(widget->color);
 
-        qDebug() << "about to update graph";
+        ////qDebug() << "about to update graph";
         // update graph
         if (widget->parser.inputType == Parser::IType::Y) {
-            qDebug() << "updating graph Y";
+            widget->graph->setVisible(true);
+            ui->plot->replot();
+            ////qDebug() << "updating graph Y";
             updateGraphY(ui->plot->xAxis->range());
         }
         else if (widget->parser.inputType == Parser::IType::X) {
-            qDebug() << "updating graph X";
+            widget->graph->setVisible(true);
+            ui->plot->replot();
+            ////qDebug() << "updating graph X";
             updateGraphX(ui->plot->yAxis->range());
         }
     }
@@ -239,7 +246,6 @@ void MainWindow::setGraphWindow() {
     // interactions for zoom and drag
     ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     //ui->plot->addGraph();
-    //connect(ui->plot, SIGNAL(mouseDoubleClick(QMouseEvent*)), SLOT(clickedGraph(QMouseEvent*)));
 
 }
 
@@ -281,7 +287,7 @@ void MainWindow::tryGraph(const QCPRange& range) {
 }
 
 void MainWindow::displayVarList() {
-    qDebug() << "display varlist";
+    ////qDebug() << "display varlist";
     QToolButton* button = qobject_cast<QToolButton*>(sender());
     Widget* widget = buttonToWidget.value(button);
 
@@ -294,7 +300,7 @@ void MainWindow::displayVarList() {
 }
 
 void MainWindow::displayOutput() {
-    qDebug() << "display output";
+    ////qDebug() << "display output";
     QToolButton* button = qobject_cast<QToolButton*>(sender());
     Widget* widget = buttonToWidget.value(button);
 
@@ -388,20 +394,20 @@ void MainWindow::updateGraphY(const QCPRange& range) {
     auto&& tickVector =axis->tickVector();
     auto&& tickVectorIterator = tickVector.begin();
 
-    constexpr auto precision = 400;
+    constexpr auto precision = 100;
     const auto tick = ( *( tickVectorIterator + 1 ) - *tickVectorIterator ) / precision;
     const auto max = ( range.upper - range.lower ) / tick;
 
     //std::map<QString, QString> dummyX;
 
-    qDebug() << "about to clear graph Y data";
+    ////qDebug() << "about to clear graph Y data";
     foreach(Widget* widget, buttonToWidget) {
         if (widget->parser.inputType == Parser::IType::Y) {
             widget->graph->data().data()->clear();
         }
     }
 
-    qDebug() << "about to draw graph Y data";
+    ////qDebug() << "about to draw graph Y data";
     foreach (Widget* widget, buttonToWidget) {
         if (widget->graph->dataCount() != 0 || widget->parser.inputType != Parser::IType::Y) continue;
 
@@ -435,20 +441,20 @@ void MainWindow::updateGraphX(const QCPRange& range) {
     auto&& tickVector =axis->tickVector();
     auto&& tickVectorIterator = tickVector.begin();
 
-    constexpr auto precision = 800;
+    constexpr auto precision = 100;
     const auto tick = ( *( tickVectorIterator + 1 ) - *tickVectorIterator ) / precision;
     const auto max = ( range.upper - range.lower ) / tick;
 
     //std::map<QString, QString> dummyX;
 
-    qDebug() << "about to clear graph X data";
+    ////qDebug() << "about to clear graph X data";
     foreach(Widget* widget, buttonToWidget) {
         if (widget->parser.inputType == Parser::IType::X) {
             widget->graph->data().data()->clear();
         }
     }
 
-    qDebug() << "about to draw graph X data";
+    ////qDebug() << "about to draw graph X data";
     foreach (Widget* widget, buttonToWidget) {
         if (widget->graph->dataCount() != 0 || widget->parser.inputType != Parser::IType::X) continue;
 

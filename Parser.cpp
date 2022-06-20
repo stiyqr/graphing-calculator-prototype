@@ -204,7 +204,7 @@ void Parser::parseMainStr() {
             if (inputStr[cursor-2] == '(' || inputStr[cursor-2] == '+' || inputStr[cursor-2] == '-' || inputStr[cursor-2] == '*'
                     || inputStr[cursor-2] == '/' || inputStr[cursor-2] == '^') {
                 inputValid = false;
-                qDebug() << "Error: empty brackets";
+                ////qDebug() << "Error: empty brackets";
                 break;
             }
 
@@ -212,26 +212,26 @@ void Parser::parseMainStr() {
             while(opStack.front().getType() != Token::TType::LEFT_BR) {
                 if (opStack.empty()) {
                     inputValid = false;
-                    qDebug() << "Error: no matching left brackets";
+                    ////qDebug() << "Error: no matching left brackets";
                     break;
                 }
                 else {
                     mainStack.emplace_back(opStack.front());
                     opStack.pop_front();
-                    qDebug() << "   pop op inside brackets";
+                    ////qDebug() << "   pop op inside brackets";
                 }
             }
 
             // discard matching parentheses
             if (inputValid){
                 opStack.pop_front();
-                qDebug() << "discard left bracket";
+                ////qDebug() << "discard left bracket";
 
                 // pop function beside brackets
                 if (opStack.front().getType() == Token::TType::FUNC) {
                     mainStack.emplace_back(opStack.front());
                     opStack.pop_front();
-                    qDebug() << "   pop function to mainstack";
+                    ////qDebug() << "   pop function to mainstack";
                 }
             }
             break;
@@ -254,7 +254,7 @@ void Parser::parseMainStr() {
         case Token::TType::FUNC:
             if (inputStr[cursor] != '(') {
                 inputValid = false;
-                qDebug() << "Error: no brackets after function";
+                ////qDebug() << "Error: no brackets after function";
                 break;
             }
 
@@ -296,7 +296,7 @@ void Parser::parseMainStr() {
 void Parser::mainStackToStr() {
     outputStr = "";
 
-    for (int i = 0; i < mainStack.size(); i++) {
+    for (std::deque<Token>::size_type i = 0; i < mainStack.size(); i++) {
         outputStr += mainStack[i].getValue();
         outputStr += '\n';
         //qDebug() << "RPN: " << mainStack[i].getValue();
@@ -330,11 +330,11 @@ long double Parser::readMainStack() {
     std::deque<Token> stackCopy = mainStack;
 
     for (int i = 0; i < stackCopy.size() && inputValid && stackCopy.size() > 1; i++) {
-        qDebug() << "reading mainstack...";
+        qDebug() << "reading mainstack... inputStr: " << inputStr;
 
         // found operator in mainstack
         if (stackCopy[i].getType() == Token::TType::OP) {
-            qDebug() << "SOLVING MAINSTACK: found operator";
+            ////qDebug() << "SOLVING MAINSTACK: found operator";
             //qDebug() << "solving mainstack x: " << var.variables["x"];
 
             if (stackCopy.size() < 3) {
@@ -359,14 +359,14 @@ long double Parser::readMainStack() {
             stackCopy.erase(stackCopy.begin() + (i - 2), stackCopy.begin() + i);
 
             // parse again
-            qDebug() << "parse again OP";
+            ////qDebug() << "parse again OP";
             i = 0;
             continue;
         }
 
         // found function in mainstack
         if (stackCopy[i].getType() == Token::TType::FUNC) {
-            qDebug() << "SOLVING MAINSTACK: found function";
+            ////qDebug() << "SOLVING MAINSTACK: found function";
             //qDebug() << "solving mainstack x: " << var.variables["x"];
 
 
@@ -416,7 +416,7 @@ long double Parser::readMainStack() {
             }
 
             // parse again
-            qDebug() << "parse again FUNC";
+            ////qDebug() << "parse again FUNC";
             i = 0;
             continue;
         }
@@ -425,7 +425,7 @@ long double Parser::readMainStack() {
     qDebug() << "finished read mainstack loop";
 
     if (stackCopy[0].getType() == Token::TType::VAR || stackCopy[0].getType() == Token::TType::X || stackCopy[0].getType() == Token::TType::Y) {
-        qDebug() << "result at [0] is var/x/y";
+        ////qDebug() << "result at [0] is var/x/y";
 
         // check if variable exist
         auto it = var.variables.find(stackCopy[0].getValue());
@@ -444,8 +444,8 @@ long double Parser::readMainStack() {
 
     }
 
-    qDebug() << "stackcopy size = " << stackCopy.size();
-    qDebug() << "stackcopy[0] num: " << stackCopy[0].getNum() << ", value: " << stackCopy[0].getValue();
+    ////qDebug() << "stackcopy size = " << stackCopy.size();
+    ////qDebug() << "stackcopy[0] num: " << stackCopy[0].getNum() << ", value: " << stackCopy[0].getValue();
 
     resultToken = stackCopy[0];
     return resultToken.getNum();
@@ -469,6 +469,7 @@ Token Parser::calculateOp(Token num1, Token num2, Token op) {
 
         // variable exist, calculate variable value
         num1.assignNum(it->second.toDouble());
+        qDebug() << "assigned num1 xy value";
     }
 
     if (num2.getType() == Token::TType::X || num2.getType() == Token::TType::Y) {
@@ -485,11 +486,12 @@ Token Parser::calculateOp(Token num1, Token num2, Token op) {
 
         // variable exist, calculate variable value
         num2.assignNum(it->second.toDouble());
+        qDebug() << "assigned num2 xy value";
     }
 
     // if num is variable, solve num
     if (num1.getType() == Token::TType::VAR) {
-        //qDebug() << "1. num1 variable, value: " << num1.getValue() << ", number: ", num1.getNum();
+        ////qDebug() << "1. num1 variable, value: " << num1.getValue() << ", number: ", num1.getNum();
 
         // check if variable exist
         auto it = var.variables.find(num1.getValue());
@@ -510,11 +512,11 @@ Token Parser::calculateOp(Token num1, Token num2, Token op) {
         if (!inputValid) return result;
         num1.setValue(num1.getValue());
 
-        //qDebug() << "2. num1 variable, value: " << num1.getValue() << ", number: ", num1.getNum();
+        ////qDebug() << "2. num1 variable, value: " << num1.getValue() << ", number: ", num1.getNum();
     }
 
     if (num2.getType() == Token::TType::VAR) {
-        //qDebug() << "1. num2 variable, value: " << num2.getValue() << ", number: ", num2.getNum();
+        ////qDebug() << "1. num2 variable, value: " << num2.getValue() << ", number: ", num2.getNum();
 
         // check if variable exist
         auto it = var.variables.find(num2.getValue());
@@ -533,7 +535,7 @@ Token Parser::calculateOp(Token num1, Token num2, Token op) {
         if (!inputValid) return result;
         num2.setValue(num2.getValue());
 
-        //qDebug() << "2. num2 variable, value: " << num2.getValue() << ", number: ", num2.getNum();
+        ////qDebug() << "2. num2 variable, value: " << num2.getValue() << ", number: ", num2.getNum();
     }
 
     // calculate
@@ -627,8 +629,8 @@ Token Parser::calculateFunc(Token num1, Token num2, Token func) {
     if (num1.getType() == Token::TType::X || num2.getType() == Token::TType::Y) {
         //num1.setValue(QString::number(value));
         auto it = var.variables.find(num1.getValue());
-        qDebug() << "IT NAME: " << it->first;
-        qDebug() << "IT VALUE: " << it->second;
+        ////qDebug() << "IT NAME: " << it->first;
+        ////qDebug() << "IT VALUE: " << it->second;
 
         // variable doesn't exist
         if (it == var.variables.end()) {
@@ -722,13 +724,16 @@ void Parser::varParser(Token& var) {
     QString varStr = var.getValue();
     int varCursor = 0;
 
-    if (varStr == "") inputValid = false;
+    if (varStr == "") {
+        inputValid = false;
+        return;
+    }
 
-    qDebug() << "VARPARSER: varstr: " << varStr;
+    qDebug() << "VARPARSER: varstr: " << varStr << "varCursor: " << varCursor;
 
     while(varCursor < varStr.length() && inputValid) {
         qDebug() << "while varparser...";
-        qDebug() << "varCursor = " << varCursor;
+        ////qDebug() << "varCursor = " << varCursor;
         switch(currentToken.getNextToken(varStr, varCursor)) {
         case Token::TType::NUM:
             varMainstack.emplace_back(currentToken);
@@ -739,16 +744,16 @@ void Parser::varParser(Token& var) {
                 negativeNum = false;
             }
 
-            qDebug() << "push num to varMainstack";
+            ////qDebug() << "push num to varMainstack";
             break;
 
         case Token::TType::VAR:
             // check for variable loop
             if (currentToken.getValue() == inputVar) {
                 inputValid = false;
-                qDebug() << "Error: token type error, variable loop";
-                qDebug() << "varStr: " << varStr;
-                qDebug() << "token value: " << currentToken.getValue();
+                ////qDebug() << "Error: token type error, variable loop";
+                ////qDebug() << "varStr: " << varStr;
+                ////qDebug() << "token value: " << currentToken.getValue();
                 break;
             }
 
@@ -791,7 +796,7 @@ void Parser::varParser(Token& var) {
             if (varStr[varCursor-2] == '(' || inputStr[cursor-2] == '+' || inputStr[cursor-2] == '-' || inputStr[cursor-2] == '*'
                     || inputStr[cursor-2] == '/' || inputStr[cursor-2] == '^') {
                 inputValid = false;
-                qDebug() << "varError: empty brackets";
+                ////qDebug() << "varError: empty brackets";
                 break;
             }
 
@@ -799,7 +804,7 @@ void Parser::varParser(Token& var) {
             while(varOpstack.front().getType() != Token::TType::LEFT_BR) {
                 if (varOpstack.empty()) {
                     inputValid = false;
-                    qDebug() << "varError: no matching left brackets";
+                    ////qDebug() << "varError: no matching left brackets";
                     break;
                 }
                 else {
@@ -841,7 +846,7 @@ void Parser::varParser(Token& var) {
         case Token::TType::FUNC:
             if (inputStr[cursor] != '(') {
                 inputValid = false;
-                qDebug() << "varError: no brackets after function";
+                ////qDebug() << "varError: no brackets after function";
                 break;
             }
 
@@ -894,6 +899,11 @@ Token Parser::varReader(std::deque<Token>& varMainstack) {
     // copy varMainstack to not change the stack
     std::deque<Token> stackCopy = varMainstack;
     Token varResult;
+
+    if (stackCopy.size() == 0) {
+        inputValid = false;
+        return varResult;
+    }
 
     //qDebug() << "VARREADER mainstack size: " << varMainstack.size();
     //qDebug() << "VARREADER: mainstack:[0] " << varMainstack[0].getNum() << ", value: " << varMainstack[0].getValue();
@@ -978,7 +988,7 @@ Token Parser::varReader(std::deque<Token>& varMainstack) {
         }
     }
 
-    //qDebug() << "varReader: stack[0] num: " << stackCopy[0].getNum() << ", value: " << stackCopy[0].getValue();
+    qDebug() << "varReader: stack[0] num: " << stackCopy[0].getNum() << ", value: " << stackCopy[0].getValue();
 
     varResult = stackCopy[0];
     return varResult;
