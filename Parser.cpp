@@ -85,7 +85,7 @@ void Parser::parseInputVar() {
 
     // parse input
     while(cursor < inputStr.length()) {
-        qDebug() << "parsing input var...";
+        ////qDebug() << "parsing input var...";
         // skip '='
         if (inputStr[cursor] == '=') {
             cursor++;
